@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Grand Line Arbitrage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Share+Tech+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#060d14;--bg2:#0a1520;--bg3:#0d1d2e;
+  --gold:#c8a84b;--gold-l:#e2c96a;--gold-d:#6b5520;--gold-dim:rgba(200,168,75,0.12);
+  --cyan:#00e5c8;--cyan-2:#00b39d;--cyan-dim:rgba(0,229,200,0.08);
+  --cream:#ddd6c0;--cream-d:#7a7060;
+  --green:#00d68f;--green-dim:rgba(0,214,143,0.1);
+  --yellow:#f0c040;--yellow-dim:rgba(240,192,64,0.1);
+  --red:#ff4d4d;--red-dim:rgba(255,77,77,0.1);
+  --line:rgba(0,229,200,0.1);--line-gold:rgba(200,168,75,0.15);--line-str:rgba(0,229,200,0.22);
+  --nav-h:64px;
+}
+html,body{min-height:100%;background:var(--bg);font-family:'Inter',sans-serif;color:var(--cream);overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);}
+
+.app{position:relative;z-index:1;padding-bottom:calc(var(--nav-h) + 1rem);}
+
+/* ── HEADER ── */
+.header{
+  text-align:center;padding:1.4rem 1rem 1.1rem;
+  border-bottom:1px solid var(--line-gold);position:relative;
+}
+.header::after{content:'';position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);width:80px;height:1px;background:var(--gold);}
+.h-eyebrow{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:3px;color:var(--cyan-2);text-transform:uppercase;margin-bottom:.4rem;}
+.h-title{font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:var(--gold);letter-spacing:2px;margin-bottom:.2rem;text-shadow:0 0 30px rgba(200,168,75,0.3);}
+.h-tag{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cream-d);letter-spacing:2px;text-transform:uppercase;}
+
+/* ── CONTROL BAR ── */
+.ctrl-bar{
+  display:flex;align-items:center;justify-content:space-around;
+  padding:.6rem 1rem;background:var(--bg2);border-bottom:1px solid var(--line);flex-wrap:wrap;gap:.5rem;
+}
+.ctrl-group{display:flex;align-items:center;gap:.4rem;}
+.ctrl-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--cyan-2);text-transform:uppercase;}
+.ctrl-bar input[type=number]{
+  width:58px;background:var(--bg3);border:1px solid var(--line-str);border-radius:3px;
+  color:var(--cyan);font-size:13px;padding:5px 6px;text-align:center;
+  font-family:'Share Tech Mono',monospace;outline:none;
+}
+.ctrl-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--cyan);}
+.toggle-cm{display:inline-flex;align-items:center;gap:5px;cursor:pointer;}
+.toggle-cm input{accent-color:var(--cyan);width:15px;height:15px;}
+.toggle-cm-label{font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;color:var(--cream-d);text-transform:uppercase;}
+
+/* ── TAB PANELS ── */
+.tab-panel{display:none;padding:1rem;}
+.tab-panel.active{display:block;}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
+.sec-title{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cyan);letter-spacing:4px;text-transform:uppercase;}
+.sec-title::before{content:'// ';color:var(--cyan-2);opacity:.6;}
+.btn-add{
+  background:none;border:1px solid rgba(0,229,200,0.3);color:var(--cyan);
+  font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;
+  padding:7px 14px;border-radius:2px;cursor:pointer;text-transform:uppercase;
+}
+
+/* ── SUMMARY GRID ── */
+.pf-summary{display:grid;grid-template-columns:1fr 1fr;gap:1px;margin-bottom:1.2rem;border:1px solid var(--line-str);border-radius:4px;overflow:hidden;}
+.sum-card{background:var(--bg2);padding:.9rem 1rem;position:relative;}
+.sum-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan-2),transparent);opacity:.4;}
+.sum-card:nth-child(2){border-left:1px solid var(--line);}
+.sum-card:nth-child(3){border-top:1px solid var(--line);}
+.sum-card:nth-child(4){border-left:1px solid var(--line);border-top:1px solid var(--line);}
+.sum-label{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--cream-d);letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
+.sum-val{font-size:18px;font-weight:300;color:var(--cream);font-family:'Inter',sans-serif;letter-spacing:-0.5px;}
+.sum-val.cy{color:var(--cyan);}
+.sum-val.gn{color:var(--green);}
+.sum-val.rd{color:var(--red);}
+
+/* ── CARD ITEMS (replaces tables on mobile) ── */
+.card-list{display:flex;flex-direction:column;gap:.7rem;}
+.card-item{
+  background:var(--bg2);border:1px solid var(--line-str);border-radius:4px;
+  padding:1rem;position:relative;overflow:hidden;
+}
+.card-item::before{content:'';position:absolute;top:0;left:0;bottom:0;width:2px;background:var(--cyan-2);opacity:.4;}
+.card-item.grail::before{background:var(--gold);}
+.card-item.forsale::before{background:var(--cream-d);}
+
+.card-name{font-size:14px;font-weight:500;color:var(--cream);margin-bottom:3px;line-height:1.3;}
+.card-set{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--gold-d);margin-bottom:.5rem;}
+.card-link{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--gold);text-decoration:none;letter-spacing:.5px;opacity:.8;}
+
+.card-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.5rem;margin:.7rem 0;}
+.metric{background:var(--bg3);border-radius:3px;padding:.5rem .6rem;border:1px solid var(--line);}
+.metric-label{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--cream-d);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px;}
+.metric-val{font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--cyan);}
+.metric-val.gn{color:var(--green);}
+.metric-val.rd{color:var(--red);}
+.metric-val.go{color:var(--gold);}
+.metric-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cream-d);margin-top:1px;}
+
+.card-footer{display:flex;justify-content:space-between;align-items:center;margin-top:.6rem;padding-top:.6rem;border-top:1px solid var(--line);}
+.card-actions{display:flex;gap:.5rem;}
+.edit-btn,.del-btn{background:none;border:1px solid var(--line);border-radius:2px;cursor:pointer;font-size:14px;padding:5px 10px;color:var(--cream-d);transition:all .15s;}
+.edit-btn:hover,.edit-btn:active{color:var(--cyan);border-color:var(--cyan);background:var(--cyan-dim);}
+.del-btn:hover,.del-btn:active{color:var(--red);border-color:var(--red);background:var(--red-dim);}
+
+/* ── BADGES ── */
+.badge{display:inline-block;padding:2px 7px;border-radius:2px;font-family:'Share Tech Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;}
+.b-gn{background:var(--green-dim);color:var(--green);border:1px solid rgba(0,214,143,.25);}
+.b-yw{background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(240,192,64,.25);}
+.b-rd{background:var(--red-dim);color:var(--red);border:1px solid rgba(255,77,77,.25);}
+.b-gy{background:rgba(122,112,96,.1);color:var(--cream-d);border:1px solid rgba(122,112,96,.2);}
+.cm-badge{font-family:'Share Tech Mono',monospace;font-size:8px;background:var(--yellow-dim);color:var(--yellow);border:1px solid rgba(240,192,64,.25);border-radius:2px;padding:1px 5px;margin-left:4px;}
+
+/* ── FLAGS ── */
+.warn-flag{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--yellow);background:var(--yellow-dim);border:1px solid rgba(240,192,64,.2);border-left:2px solid var(--yellow);border-radius:2px;padding:7px 10px;margin-bottom:.8rem;}
+.con-flag{font-family:'Share Tech Mono',monospace;font-size:10px;color:var(--red);background:var(--red-dim);border:1px solid rgba(255,77,77,.2);border-left:2px solid var(--red);border-radius:2px;padding:7px 10px;margin-bottom:.8rem;}
+
+/* ── TIER DIVIDER ── */
+.tier-divider{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--gold);letter-spacing:4px;text-transform:uppercase;padding:.4rem 0;margin-top:.4rem;opacity:.8;}
+
+/* ── DUMP SECTION ── */
+.sale-section{margin-top:1.5rem;padding-top:1.2rem;border-top:1px solid var(--line-gold);}
+.sale-note{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--cream-d);margin-bottom:.8rem;}
+
+/* ── SCOUT ── */
+.scout-card{background:var(--bg2);border:1px solid var(--line-str);border-radius:4px;padding:1.2rem;position:relative;}
+.scout-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.3;}
+.scout-fields{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1rem;}
+.fg{display:flex;flex-direction:column;gap:5px;}
+.fl{font-family:'Share Tech Mono',monospace;font-size:8px;color:var(--cyan-2);letter-spacing:3px;text-transform:uppercase;}
+.fi{background:var(--bg3);border:1px solid var(--line);border-radius:3px;color:var(--cream);font-size:16px;padding:10px 12px;font-family:'Inter',sans-serif;outline:none;width:100%;}
+.fi:focus{border-color:var(--cyan-2);}
+select.fi{appearance:none;-webkit-appearance:none;}
+.btn-scout{width:100%;padding:12px;background:var(--cyan-dim);border:1px solid rgba(0,229,200,.35);border-radius:3px;color:var(--cyan);font-family:'Cinzel',serif;font-size:13px;letter-spacing:2px;cursor:pointer;text-transform:uppercase;}
+
+/* ── RESULT PANEL ── */
+.res-panel{margin-top:1rem;padding:1rem;background:var(--bg3);border-radius:3px;border-left:2px solid var(--cyan);display:none;}
+.res-panel.show{display:block;}
+.res-panel.green{border-left-color:var(--green);}
+.res-panel.yellow{border-left-color:var(--yellow);}
+.res-panel.red{border-left-color:var(--red);}
+.res-verdict{font-family:'Cinzel',serif;font-size:14px;font-weight:600;margin-bottom:.8rem;}
+.res-verdict.green{color:var(--green);}
+.res-verdict.yellow{color:var(--yellow);}
+.res-verdict.red{color:var(--red);}
+.res-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;margin-bottom:.9rem;border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.res-metric{background:var(--bg2);padding:.6rem .7rem;}
+.res-metric+.res-metric{border-left:1px solid var(--line);}
+.res-ml{font-family:'Share Tech Mono',monospace;font-size:7px;color:var(--cream-d);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.res-mv{font-family:'Share Tech Mono',monospace;font-size:14px;color:var(--cyan);}
+.res-actions{display:flex;gap:.6rem;}
+.res-save{flex:1;padding:9px;background:none;border:1px solid rgba(0,229,200,.3);color:var(--cyan);font-family:'Share Tech Mono',monospace;font-size:9px;letter-spacing:1px;border-radius:2px;cursor:pointer;text-transform:uppercase;text-align:center;}
+.res-save.gold{border-color:rgba(200,168,75,.3);color:var(--gold);}
+.r-warn{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--yellow);background:var(--yellow-dim);border:1px solid rgba(240,192,64,.2);border-left:2px solid var(--yellow);border-radius:2px;padding:6px 9px;margin-bottom:.8rem;display:none;}
+
+/* ── BOTTOM NAV ── */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;height:var(--nav-h);
+  background:var(--bg2);border-top:1px solid var(--line-str);
+  display:flex;z-index:50;
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;background:none;border:none;cursor:pointer;
+  color:var(--cream-d);transition:all .2s;padding:0;
+  border-top:2px solid transparent;
+}
+.nav-btn.active{color:var(--gold);border-top-color:var(--gold);background:rgba(200,168,75,0.04);}
+.nav-icon{font-size:20px;line-height:1;}
+.nav-label{font-family:'Share Tech Mono',monospace;font-size:7px;letter-spacing:2px;text-transform:uppercase;}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:100;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal{
+  background:var(--bg2);border:1px solid var(--line-str);
+  border-radius:8px 8px 0 0;padding:1.5rem 1.2rem 2rem;
+  width:100%;max-height:90vh;overflow-y:auto;position:relative;
+}
+.modal::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.4;}
+.modal-drag{width:40px;height:3px;background:var(--line-str);border-radius:3px;margin:0 auto .8rem;display:block;}
+.modal-title{font-family:'Cinzel',serif;font-size:13px;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.2rem;padding-bottom:.7rem;border-bottom:1px solid var(--line-gold);}
+.modal-close{position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--cream-d);cursor:pointer;font-size:20px;padding:4px 8px;}
+.modal-fields{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1.2rem;}
+.modal-actions{display:flex;gap:.7rem;}
+.btn-cancel{flex:1;background:none;border:1px solid var(--line);color:var(--cream-d);font-family:'Share Tech Mono',monospace;font-size:10px;padding:11px;border-radius:2px;cursor:pointer;text-transform:uppercase;}
+.btn-save{flex:2;background:var(--gold-dim);border:1px solid rgba(200,168,75,.4);color:var(--gold);font-family:'Cinzel',serif;font-size:11px;letter-spacing:2px;padding:11px;border-radius:2px;cursor:pointer;text-transform:uppercase;}
+
+.empty-state{text-align:center;padding:3rem 1rem;font-family:'Share Tech Mono',monospace;color:var(--cream-d);font-size:10px;letter-spacing:2px;line-height:2;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="h-eyebrow">Egghead Lab · Grand Line Intel</div>
+    <div class="h-title">⚓ GRAND LINE ARBITRAGE</div>
+    <div class="h-tag">TCG Intelligence · BR Scanner</div>
+  </div>
+
+  <div class="ctrl-bar">
+    <div class="ctrl-group">
+      <span class="ctrl-label">USD/BRL</span>
+      <input type="number" id="fxRate" value="5.75" step="0.01" oninput="refreshAll()">
+      <span class="ctrl-val" id="fxDisp">5.75</span>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Friction</span>
+      <input type="number" id="impPct" value="20" step="1" oninput="refreshAll()">
+      <span class="ctrl-label">%</span>
+    </div>
+    <label class="toggle-cm">
+      <input type="checkbox" id="cmToggle" onchange="refreshAll()">
+      <span class="toggle-cm-label">Cons. marks</span>
+    </label>
+  </div>
+
+  <!-- PORTFOLIO TAB -->
+  <div id="tab-portfolio" class="tab-panel active">
+    <div class="pf-summary" id="pfSum"></div>
+    <div id="pf-flags"></div>
+    <div class="sec-hdr">
+      <div class="sec-title">Holdings</div>
+      <button class="btn-add" onclick="openModal('portfolio')">+ Add</button>
+    </div>
+    <div class="card-list" id="pf-content"></div>
+    <div class="sale-section">
+      <div class="sec-hdr">
+        <div class="sec-title" style="color:var(--cream-d);">Dump Targets</div>
+      </div>
+      <div class="sale-note">// excluded from return calculations</div>
+      <div class="card-list" id="sale-content"></div>
+    </div>
+  </div>
+
+  <!-- WATCHLIST TAB -->
+  <div id="tab-watchlist" class="tab-panel">
+    <div class="sec-hdr">
+      <div class="sec-title">Watchlist</div>
+      <button class="btn-add" onclick="openModal('watchlist')">+ Add</button>
+    </div>
+    <div class="card-list" id="wl-content"></div>
+  </div>
+
+  <!-- SCOUT TAB -->
+  <div id="tab-scout" class="tab-panel">
+    <div class="scout-card">
+      <div class="sec-title" style="margin-bottom:1rem;">Deal Evaluator</div>
+      <div class="scout-fields">
+        <div class="fg"><div class="fl">Card Name</div><input class="fi" id="s-name" placeholder="e.g. Luffy Gift Collection" type="text"></div>
+        <div class="fg"><div class="fl">BR Price (R$)</div><input class="fi" id="s-br" placeholder="e.g. 180" type="number" inputmode="decimal"></div>
+        <div class="fg"><div class="fl">TCGPlayer Floor (USD)</div><input class="fi" id="s-tcg" placeholder="e.g. 55" type="number" inputmode="decimal"></div>
+      </div>
+      <button class="btn-scout" onclick="runScout()">⚓ Evaluate Deal</button>
+      <div class="res-panel" id="resPanel">
+        <div class="res-verdict" id="resVerdict"></div>
+        <div class="res-metrics">
+          <div class="res-metric"><div class="res-ml">Discount</div><div class="res-mv" id="r-disc"></div></div>
+          <div class="res-metric"><div class="res-ml">Landed</div><div class="res-mv" id="r-land"></div></div>
+          <div class="res-metric"><div class="res-ml">Margin</div><div class="res-mv" id="r-marg"></div></div>
+        </div>
+        <div class="r-warn" id="r-warn"></div>
+        <div class="res-actions">
+          <button class="res-save" onclick="scoutToWl()">+ Watchlist</button>
+          <button class="res-save gold" onclick="scoutToPf()">+ Portfolio</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-btn active" onclick="switchTab('portfolio')">
+    <span class="nav-icon">💰</span>
+    <span class="nav-label">Portfolio</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('watchlist')">
+    <span class="nav-icon">📋</span>
+    <span class="nav-label">Watchlist</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('scout')">
+    <span class="nav-icon">⚔</span>
+    <span class="nav-label">Scout</span>
+  </button>
+</nav>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalOv">
+  <div class="modal">
+    <span class="modal-drag"></span>
+    <div class="modal-title" id="modalTitle">Add Card</div>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-fields" id="modalFields"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="confirmModal()">Save Card</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SEED_PF=[
+  {id:1,name:"Luffy Gift Collection",costBRL:329.90,tcgUSD:200,tcgUSD_cons:200,conservative:false,qty:1,tier:"Grail",character:"Luffy",set:"GC 2023 (P-001-GC)"},
+  {id:2,name:"Nami Gift Collection",costBRL:299.90,tcgUSD:115,tcgUSD_cons:115,conservative:false,qty:2,tier:"Grail",character:"Nami",set:"GC 2023 (OP01-016-GC)"},
+  {id:3,name:"Zoro OP01-001 Alternate Art",costBRL:560.00,tcgUSD:140,tcgUSD_cons:140,conservative:false,qty:1,tier:"Grail",character:"Zoro",set:"OP-01 Promo (PC-01)"},
+  {id:4,name:"Luffy 2nd Anniversary Stamp",costBRL:32.00,tcgUSD:109,tcgUSD_cons:60,conservative:true,qty:4,tier:"Grail",character:"Luffy",set:"Anniversary Promo (P-043-AP)"},
+  {id:5,name:"Ace Gift Collection",costBRL:59.00,tcgUSD:42,tcgUSD_cons:42,conservative:false,qty:2,tier:"Hold",character:"Ace",set:"GC 2023 (P-028-GC)"},
+  {id:6,name:"Law Gift Collection",costBRL:57.00,tcgUSD:32,tcgUSD_cons:32,conservative:false,qty:3,tier:"Hold",character:"Law",set:"GC 2023 (ST03-008-GC)"},
+  {id:7,name:"Robin Gift Collection",costBRL:229.90,tcgUSD:85,tcgUSD_cons:85,conservative:false,qty:1,tier:"Hold",character:"Robin",set:"GC 2023 (ST01-008-GC)"},
+  {id:8,name:"Hancock Gift Collection",costBRL:240.00,tcgUSD:75,tcgUSD_cons:75,conservative:false,qty:1,tier:"Hold",character:"Hancock",set:"GC 2023 (OP02-059-GC)"},
+  {id:9,name:"Luffy ST01-012 Alternate Art",costBRL:252.00,tcgUSD:74,tcgUSD_cons:74,conservative:false,qty:1,tier:"Hold",character:"Luffy",set:"ST-01 (ST01-012-AA)"},
+  {id:10,name:"Chopper Film Red CC",costBRL:77.90,tcgUSD:65,tcgUSD_cons:65,conservative:false,qty:1,tier:"Hold",character:"Chopper",set:"Film Red PCC (ST01-006-CC)"},
+  {id:11,name:"Luffy Film Red CC",costBRL:96.90,tcgUSD:72,tcgUSD_cons:72,conservative:false,qty:1,tier:"Hold",character:"Luffy",set:"Film Red PCC (P-022-CC)"},
+  {id:12,name:"Zoro Film Red CC",costBRL:99.90,tcgUSD:56,tcgUSD_cons:56,conservative:false,qty:1,tier:"Hold",character:"Zoro",set:"Film Red PCC (ST01-013-CC)"},
+  {id:13,name:"Shanks Film Red CC",costBRL:78.80,tcgUSD:35,tcgUSD_cons:35,conservative:false,qty:1,tier:"Hold",character:"Shanks",set:"Film Red PCC (P-016-CC)"},
+  {id:14,name:"Uta Gift Collection",costBRL:59.90,tcgUSD:25,tcgUSD_cons:25,conservative:false,qty:1,tier:"Collection",character:"Uta",set:"GC 2023 (OP01-005-GC)"},
+  {id:15,name:"Franky Gift Collection",costBRL:54.90,tcgUSD:20,tcgUSD_cons:20,conservative:false,qty:1,tier:"Collection",character:"Franky",set:"GC 2023 (OP01-021-GC)"},
+  {id:16,name:"Sanji Film Red CC",costBRL:87.90,tcgUSD:18,tcgUSD_cons:18,conservative:false,qty:1,tier:"Collection",character:"Sanji",set:"Film Red PCC (ST01-004-CC)"},
+];
+const SEED_SALE=[
+  {id:17,name:"Zoro OP14-015 Alternate Art",costBRL:49.50,tcgUSD:9,qty:1,character:"Zoro",set:"OP-14 (OP14-015-AA)"},
+  {id:18,name:"Luffy PRB-01 Reprint",costBRL:40.00,tcgUSD:6,qty:1,character:"Luffy",set:"PRB-01 (OP05-119)"},
+];
+
+let pf=JSON.parse(localStorage.getItem('gla_pf')||'null')||SEED_PF.map(c=>({...c}));
+let wl=JSON.parse(localStorage.getItem('gla_wl')||'[]');
+let sale=JSON.parse(localStorage.getItem('gla_sale')||'null')||SEED_SALE.map(c=>({...c}));
+let modalMode=null,pendingScout=null,editingId=null,editingList=null;
+
+function save(){
+  localStorage.setItem('gla_pf',JSON.stringify(pf));
+  localStorage.setItem('gla_wl',JSON.stringify(wl));
+  localStorage.setItem('gla_sale',JSON.stringify(sale));
+}
+function getFX(){return parseFloat(document.getElementById('fxRate').value)||5.75;}
+function getImp(){return parseFloat(document.getElementById('impPct').value)/100||0.20;}
+function useCons(){return document.getElementById('cmToggle').checked;}
+function effectiveTCG(c){return(useCons()&&c.conservative)?c.tcgUSD_cons:c.tcgUSD;}
+function tcgURL(name){return'https://www.tcgplayer.com/search/one-piece-card-game/product?productLineName=one-piece-card-game&q='+encodeURIComponent(name);}
+
+function calcDeal(brPrice,tcgUSD){
+  const fx=getFX(),imp=getImp();
+  const tcgBRL=tcgUSD*fx;
+  const disc=((tcgBRL-brPrice)/tcgBRL)*100;
+  const landed=brPrice*(1+imp);
+  const margin=((tcgBRL-landed)/tcgBRL)*100;
+  return{tcgBRL,disc,landed,margin};
+}
+function verdict(d){return d>=44?'green':d>=30?'yellow':'red';}
+function verdictText(c){
+  return c==='green'?'✓ BUY — Strong Arbitrage':c==='yellow'?'◈ MARGINAL — Evaluate Risk':'✕ SKIP — Below Threshold';
+}
+
+function renderPortfolio(){
+  const fx=getFX(),imp=getImp();
+  const clean=pf.filter(c=>c.tier!=='For Sale');
+  let totCost=0,totVal=0,charMap={};
+  clean.forEach(c=>{
+    const tcg=effectiveTCG(c);
+    totCost+=c.costBRL*(1+imp)*c.qty;
+    totVal+=tcg*fx*c.qty;
+    if(c.character) charMap[c.character]=(charMap[c.character]||0)+(tcg*fx*c.qty);
+  });
+  const pnl=totVal-totCost,pnlPct=(pnl/totCost)*100,pnlC=pnl>=0?'gn':'rd';
+
+  document.getElementById('pfSum').innerHTML=`
+    <div class="sum-card"><div class="sum-label">Cost (w/ friction)</div><div class="sum-val">R$ ${totCost.toFixed(0)}</div></div>
+    <div class="sum-card"><div class="sum-label">Value</div><div class="sum-val cy">R$ ${totVal.toFixed(0)}</div></div>
+    <div class="sum-card"><div class="sum-label">P&amp;L</div><div class="sum-val ${pnlC}">${pnl>=0?'+':''}R$ ${pnl.toFixed(0)}</div></div>
+    <div class="sum-card"><div class="sum-label">Return</div><div class="sum-val ${pnlC}">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}%</div></div>
+  `;
+
+  let flags='';
+  if(useCons()) flags+=`<div class="warn-flag">◈ Conservative marks active</div>`;
+  const top=Object.entries(charMap).sort((a,b)=>b[1]-a[1])[0];
+  if(top&&(top[1]/totVal)>0.5) flags+=`<div class="con-flag">⚠ ${top[0]} = ${((top[1]/totVal)*100).toFixed(0)}% of portfolio</div>`;
+  document.getElementById('pf-flags').innerHTML=flags;
+
+  const tierOrder=['Grail','Hold','Collection'];
+  const grouped={};
+  pf.filter(c=>c.tier!=='For Sale').forEach(c=>{if(!grouped[c.tier])grouped[c.tier]=[];grouped[c.tier].push(c);});
+
+  let html='';
+  tierOrder.forEach(tier=>{
+    if(!grouped[tier]||!grouped[tier].length) return;
+    html+=`<div class="tier-divider">${tier}</div>`;
+    grouped[tier].forEach(c=>{
+      const tcg=effectiveTCG(c);
+      const cost=c.costBRL*(1+imp)*c.qty;
+      const val=tcg*fx*c.qty;
+      const pnl=val-cost,pnlP=(pnl/cost)*100;
+      const pc=pnl>=0?'gn':'rd';
+      html+=`<div class="card-item ${tier.toLowerCase()}">
+        <div class="card-name">${c.name}${c.conservative&&useCons()?'<span class="cm-badge">cons</span>':''}</div>
+        <div class="card-set">${c.set||''} · qty ${c.qty}</div>
+        <a class="card-link" href="${tcgURL(c.name)}" target="_blank">⬡ TCGPlayer</a>
+        <div class="card-metrics">
+          <div class="metric">
+            <div class="metric-label">Cost</div>
+            <div class="metric-val">R$ ${cost.toFixed(0)}</div>
+            <div class="metric-sub">R$ ${c.costBRL}/ea</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">TCG Floor</div>
+            <div class="metric-val">R$ ${(tcg*fx).toFixed(0)}</div>
+            <div class="metric-sub">$${tcg}</div>
+          </div>
+          <div class="metric">
+            <div class="metric-label">Value</div>
+            <div class="metric-val cy">R$ ${val.toFixed(0)}</div>
+          </div>
+        </div>
+        <div class="card-footer">
+          <div>
+            <span class="metric-val ${pc}" style="font-size:16px">${pnl>=0?'+':''}R$ ${pnl.toFixed(0)}</span>
+            <span class="metric-sub" style="display:inline;margin-left:4px;color:var(--${pc==='gn'?'green':'red'})">${pnlP>=0?'+':''}${pnlP.toFixed(1)}%</span>
+          </div>
+          <div class="card-actions">
+            <button class="edit-btn" onclick="editPf(${c.id})">✎</button>
+            <button class="del-btn" onclick="delPf(${c.id})">✕</button>
+          </div>
+        </div>
+      </div>`;
+    });
+  });
+  document.getElementById('pf-content').innerHTML=html||'<div class="empty-state">// no holdings yet</div>';
+
+  let shtml='';
+  if(!sale.length){shtml='<div class="empty-state">// no dump targets</div>';}
+  else sale.forEach(c=>{
+    const val=c.tcgUSD*fx*c.qty;
+    shtml+=`<div class="card-item forsale">
+      <div class="card-name">${c.name}</div>
+      <div class="card-set">${c.set||''} · qty ${c.qty}</div>
+      <a class="card-link" href="${tcgURL(c.name)}" target="_blank">⬡ TCGPlayer</a>
+      <div class="card-metrics">
+        <div class="metric"><div class="metric-label">Cost</div><div class="metric-val">R$ ${(c.costBRL*c.qty).toFixed(0)}</div></div>
+        <div class="metric"><div class="metric-label">TCG Floor</div><div class="metric-val">R$ ${(c.tcgUSD*fx).toFixed(0)}</div><div class="metric-sub">$${c.tcgUSD}</div></div>
+        <div class="metric"><div class="metric-label">Est Value</div><div class="metric-val cy">R$ ${val.toFixed(0)}</div></div>
+      </div>
+      <div class="card-footer">
+        <span></span>
+        <div class="card-actions">
+          <button class="edit-btn" onclick="editSale(${c.id})">✎</button>
+          <button class="del-btn" onclick="delSale(${c.id})">✕</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('sale-content').innerHTML=shtml;
+}
+
+function renderWatchlist(){
+  const el=document.getElementById('wl-content');
+  if(!wl.length){el.innerHTML='<div class="empty-state">// watchlist empty<br>use Scout to evaluate a deal</div>';return;}
+  const fx=getFX();
+  let html='';
+  wl.forEach(c=>{
+    const{disc}=calcDeal(c.brPrice,c.tcgUSD);
+    const col=verdict(disc);
+    const tm={Grail:'b-yw',Priority:'b-gn',Watch:'b-gy'};
+    html+=`<div class="card-item">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;">
+        <div class="card-name" style="flex:1">${c.name}</div>
+        <span class="badge b-${col}" style="margin-left:.5rem;flex-shrink:0">${col==='green'?'Buy':col==='yellow'?'Watch':'Skip'}</span>
+      </div>
+      ${c.notes?`<div class="card-set">${c.notes}</div>`:''}
+      <a class="card-link" href="${tcgURL(c.name)}" target="_blank">⬡ TCGPlayer</a>
+      <div class="card-metrics">
+        <div class="metric"><div class="metric-label">BR Price</div><div class="metric-val go">R$ ${c.brPrice}</div></div>
+        <div class="metric"><div class="metric-label">TCG Floor</div><div class="metric-val">R$ ${(c.tcgUSD*fx).toFixed(0)}</div><div class="metric-sub">$${c.tcgUSD}</div></div>
+        <div class="metric"><div class="metric-label">Discount</div><div class="metric-val">${disc.toFixed(1)}%</div></div>
+      </div>
+      <div class="card-footer">
+        <div style="display:flex;align-items:center;gap:.5rem;">
+          <span class="badge ${tm[c.tier]||'b-gy'}">${c.tier}</span>
+          <span class="metric-sub">Target R$ ${c.targetEntry}</span>
+        </div>
+        <div class="card-actions">
+          <button class="edit-btn" onclick="editWl(${c.id})">✎</button>
+          <button class="del-btn" onclick="delWl(${c.id})">✕</button>
+        </div>
+      </div>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function delPf(id){pf=pf.filter(c=>c.id!==id);save();renderPortfolio();}
+function delSale(id){sale=sale.filter(c=>c.id!==id);save();renderPortfolio();}
+function delWl(id){wl=wl.filter(c=>c.id!==id);save();renderWatchlist();}
+function editPf(id){const c=pf.find(x=>x.id===id);if(!c)return;editingId=id;editingList='pf';openModal('portfolio',c);}
+function editSale(id){const c=sale.find(x=>x.id===id);if(!c)return;editingId=id;editingList='sale';openModal('portfolio',c);}
+function editWl(id){const c=wl.find(x=>x.id===id);if(!c)return;editingId=id;editingList='wl';openModal('watchlist',c);}
+
+function runScout(){
+  const name=document.getElementById('s-name').value.trim();
+  const br=parseFloat(document.getElementById('s-br').value);
+  const tcg=parseFloat(document.getElementById('s-tcg').value);
+  if(!br||!tcg)return;
+  const{disc,landed,margin}=calcDeal(br,tcg);
+  const col=verdict(disc);
+  const panel=document.getElementById('resPanel');
+  panel.className='res-panel show '+col;
+  document.getElementById('resVerdict').className='res-verdict '+col;
+  document.getElementById('resVerdict').textContent=verdictText(col);
+  document.getElementById('r-disc').textContent=disc.toFixed(1)+'%';
+  document.getElementById('r-land').textContent='R$ '+landed.toFixed(0);
+  document.getElementById('r-marg').textContent=margin.toFixed(1)+'%';
+  const warn=document.getElementById('r-warn');
+  if(disc>=95){warn.style.display='block';warn.textContent='⚠ Discount >95% — verify authenticity';}
+  else if(margin<0){warn.style.display='block';warn.textContent='⚠ Landed cost exceeds TCG floor';}
+  else{warn.style.display='none';}
+  pendingScout={name:name||'Unknown Card',brPrice:br,tcgUSD:tcg};
+}
+
+function scoutToWl(){
+  if(!pendingScout)return;
+  wl.push({id:Date.now(),name:pendingScout.name,brPrice:pendingScout.brPrice,tcgUSD:pendingScout.tcgUSD,targetEntry:pendingScout.brPrice,tier:'Watch',notes:''});
+  save();renderWatchlist();alert('Saved to Watchlist!');
+}
+function scoutToPf(){
+  if(!pendingScout)return;
+  pf.push({id:Date.now(),name:pendingScout.name,costBRL:pendingScout.brPrice,tcgUSD:pendingScout.tcgUSD,tcgUSD_cons:pendingScout.tcgUSD,conservative:false,qty:1,tier:'Hold',character:'',set:''});
+  save();renderPortfolio();alert('Added to Portfolio!');
+}
+
+function openModal(mode,prefill){
+  modalMode=mode;
+  if(!prefill){editingId=null;editingList=null;}
+  const isEdit=!!prefill;
+  document.getElementById('modalTitle').textContent=
+    isEdit?(mode==='watchlist'?'✎ Edit Card':'✎ Edit Card')
+          :(mode==='watchlist'?'+ Add to Watchlist':'+ Add to Portfolio');
+  const f=document.getElementById('modalFields');
+  if(mode==='watchlist'){
+    f.innerHTML=`
+      <div class="fg"><div class="fl">Card Name</div><input class="fi" id="m-name" placeholder="Name + set code" value="${prefill?prefill.name:''}"></div>
+      <div class="fg"><div class="fl">BR Price (R$)</div><input class="fi" id="m-br" type="number" inputmode="decimal" placeholder="e.g. 180" value="${prefill?prefill.brPrice:''}"></div>
+      <div class="fg"><div class="fl">TCGPlayer Floor (USD)</div><input class="fi" id="m-tcg" type="number" inputmode="decimal" placeholder="e.g. 55" value="${prefill?prefill.tcgUSD:''}"></div>
+      <div class="fg"><div class="fl">Target Entry (R$)</div><input class="fi" id="m-target" type="number" inputmode="decimal" placeholder="Max you'd pay" value="${prefill?prefill.targetEntry:''}"></div>
+      <div class="fg"><div class="fl">Tier</div><select class="fi" id="m-tier">
+        ${['Watch','Priority','Grail'].map(t=>`<option${prefill&&prefill.tier===t?' selected':''}>${t}</option>`).join('')}
+      </select></div>
+      <div class="fg"><div class="fl">Notes</div><input class="fi" id="m-notes" placeholder="e.g. thin market" value="${prefill?prefill.notes:''}"></div>
+    `;
+  } else {
+    f.innerHTML=`
+      <div class="fg"><div class="fl">Card Name</div><input class="fi" id="m-name" placeholder="Name + set code" value="${prefill?prefill.name:''}"></div>
+      <div class="fg"><div class="fl">Cost Basis (R$)</div><input class="fi" id="m-br" type="number" inputmode="decimal" placeholder="What you paid" value="${prefill?prefill.costBRL:''}"></div>
+      <div class="fg"><div class="fl">TCGPlayer Floor (USD)</div><input class="fi" id="m-tcg" type="number" inputmode="decimal" placeholder="Current floor" value="${prefill?prefill.tcgUSD:''}"></div>
+      <div class="fg"><div class="fl">Conservative Floor (USD)</div><input class="fi" id="m-cons" type="number" inputmode="decimal" placeholder="Optional — thin market" value="${prefill&&prefill.conservative?prefill.tcgUSD_cons:''}"></div>
+      <div class="fg"><div class="fl">Qty</div><input class="fi" id="m-qty" type="number" inputmode="numeric" value="${prefill?prefill.qty:1}"></div>
+      <div class="fg"><div class="fl">Tier</div><select class="fi" id="m-tier">
+        ${['Hold','Grail','Collection','For Sale'].map(t=>`<option${prefill&&prefill.tier===t?' selected':''}>${t}</option>`).join('')}
+      </select></div>
+      <div class="fg"><div class="fl">Character</div><input class="fi" id="m-char" placeholder="e.g. Luffy" value="${prefill?prefill.character:''}"></div>
+      <div class="fg"><div class="fl">Set / Series</div><input class="fi" id="m-set" placeholder="e.g. GC 2023" value="${prefill?prefill.set:''}"></div>
+    `;
+  }
+  document.getElementById('modalOv').classList.add('show');
+}
+
+function closeModal(){document.getElementById('modalOv').classList.remove('show');}
+
+function confirmModal(){
+  const name=document.getElementById('m-name')?.value.trim();
+  const br=parseFloat(document.getElementById('m-br')?.value);
+  const tcg=parseFloat(document.getElementById('m-tcg')?.value);
+  if(!name||!br||!tcg){alert('Name, BR Price and TCG Floor are required.');return;}
+  const tier=document.getElementById('m-tier')?.value;
+  if(modalMode==='watchlist'){
+    const target=parseFloat(document.getElementById('m-target')?.value)||br;
+    const notes=document.getElementById('m-notes')?.value||'';
+    if(editingId&&editingList==='wl'){
+      wl=wl.map(c=>c.id===editingId?{...c,name,brPrice:br,tcgUSD:tcg,targetEntry:target,tier,notes}:c);
+    } else {
+      wl.push({id:Date.now(),name,brPrice:br,tcgUSD:tcg,targetEntry:target,tier,notes});
+    }
+    save();renderWatchlist();
+  } else {
+    const consVal=parseFloat(document.getElementById('m-cons')?.value)||tcg;
+    const isCons=consVal!==tcg;
+    const qty=parseInt(document.getElementById('m-qty')?.value)||1;
+    const character=document.getElementById('m-char')?.value||'';
+    const set=document.getElementById('m-set')?.value||'';
+    const card={costBRL:br,tcgUSD:tcg,tcgUSD_cons:consVal,conservative:isCons,qty,tier,character,set,name};
+    if(editingId){
+      const id=editingId;
+      pf=pf.filter(c=>c.id!==id);sale=sale.filter(c=>c.id!==id);
+      if(tier==='For Sale')sale.push({...card,id});else pf.push({...card,id});
+    } else {
+      if(tier==='For Sale')sale.push({...card,id:Date.now()});else pf.push({...card,id:Date.now()});
+    }
+    save();renderPortfolio();
+  }
+  editingId=null;editingList=null;
+  closeModal();
+}
+
+function refreshAll(){
+  const fx=parseFloat(document.getElementById('fxRate').value||5.75);
+  const imp=parseFloat(document.getElementById('impPct').value||20);
+  document.getElementById('fxDisp').textContent=fx.toFixed(2);
+  localStorage.setItem('gla_fx',fx);
+  localStorage.setItem('gla_imp',imp);
+  renderPortfolio();renderWatchlist();
+}
+
+function switchTab(tab){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.querySelector(`.nav-btn[onclick*="${tab}"]`).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+(function loadSettings(){
+  const fx=localStorage.getItem('gla_fx');
+  const imp=localStorage.getItem('gla_imp');
+  if(fx)document.getElementById('fxRate').value=fx;
+  if(imp)document.getElementById('impPct').value=imp;
+  document.getElementById('fxDisp').textContent=parseFloat(fx||5.75).toFixed(2);
+})();
+
+renderPortfolio();
+renderWatchlist();
+</script>
+</body>
+</html>
